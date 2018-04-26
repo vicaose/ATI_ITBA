@@ -10,7 +10,6 @@ import gui.tp2.filters.KirshBorderDetectorDialog;
 import gui.tp2.filters.LaplacianDialog;
 import gui.tp2.filters.LogDialog;
 import gui.tp2.filters.PrewittBorderDetectorDialog;
-import gui.tp2.filters.RobertsBorderDetectorDialog;
 import gui.tp2.filters.SobelBorderDetectorDialog;
 
 import java.awt.event.ActionEvent;
