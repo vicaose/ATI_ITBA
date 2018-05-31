@@ -18,10 +18,61 @@ import domain.Image;
 import domain.Image.ChannelType;
 import domain.SynthetizationType;
 import domain.mask.Mask;
-
+import domain.tracking.Tita;
 
 public class MaskUtils {
 
+	public static double applySusanPixelMask(int x, int y, Mask mask,
+			Image img, ChannelType color) {
+		boolean ignoreByX = x < mask.getWidth() / 2
+				|| x > img.getWidth() - mask.getWidth() / 2;
+		boolean ignoreByY = y < mask.getHeight() / 2
+				|| y > img.getHeight() - mask.getHeight() / 2;
+		if (ignoreByX || ignoreByY) {
+			return 1;
+		}
+
+		// Step 2.
+		final int threshold = 27;
+		int n_ro = 0;
+		double ro = img.getPixel(x, y, color);
+		for (int i = -mask.getWidth() / 2; i <= mask.getWidth() / 2; i++) {
+			for (int j = -mask.getHeight() / 2; j <= mask.getHeight() / 2; j++) {
+				if (img.validPixel(x + i, y + j) && mask.getValue(i, j) == 1) {
+					double eachPixel = img.getPixel(x + i, y + j, color);
+					if (Math.abs(ro - eachPixel) < threshold) {
+						n_ro += 1;
+					}
+				}
+			}
+		}
+		double s_ro = 1 - n_ro / 37.0;
+		return s_ro;
+	}
+
+	public static double[][] applyMask(Tita tita, Set<Point> innerBorder, Set<Point> outerBorder, Mask mask) {
+		double[][] conv = new double[tita.getWidth()][tita.getHeight()];
+		for (Point p : innerBorder) {
+			conv[p.x][p.y] = applyMask(tita, mask, p.x, p.y);
+		}
+		for (Point p : outerBorder) {
+			conv[p.x][p.y] = applyMask(tita, mask, p.x, p.y);
+		}
+		return conv;
+	}
+	
+	private static double applyMask(Tita tita, Mask mask, int x, int y) {
+		double pix = 0;
+		int w = tita.getWidth(), h = tita.getHeight();
+		for (int i = -mask.getWidth() / 2; i <= mask.getWidth() / 2; i++) {
+			for (int j = -mask.getHeight() / 2; j <= mask.getHeight() / 2; j++) {
+				int a = getPoint(x, i, w);
+				int b = getPoint(y, j, h);
+				pix += mask.getValue(i, j) * tita.getValue(a, b);
+			}
+		}
+		return pix;
+	}
 	
 	public static Image applyMask(Image original, Mask mask) {
 		if (original == null || mask == null) {

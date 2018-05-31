@@ -167,7 +167,6 @@ public class PunctualOperationsMenu extends JMenu {
 		add(new JSeparator());
 		add(contrast);
 		add(new JSeparator());
-
 		add(histogram);
 		add(new JSeparator());
 		add(ecualization);

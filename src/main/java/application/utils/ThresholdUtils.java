@@ -146,4 +146,81 @@ public class ThresholdUtils {
 		return probabilities;
 	}
 
+	public static Image hysteresis(Image image, double t1, double t2) {
+		Image t = (Image) image.clone();
+		if (image.getType() == ImageType.GREYSCALE) {
+			applyHysteresis(t, t1, t2, null);
+		} else {
+			applyHysteresis(t, t1, t2, RED);
+			applyHysteresis(t, t1, t2, GREEN);
+			applyHysteresis(t, t1, t2, BLUE);
+		}
+		return t;
+	}
+
+	public static void hysteresisForCanny(Image image, ChannelType c,
+			double t1, double t2) {
+		applyHysteresis(image, t1, t2, c);
+		checkHysteresisNeighbors(image, t1, t2);
+	}
+
+	private static void checkHysteresisNeighbors(Image image, double t1,
+			double t2) {
+		int height = image.getHeight();
+		int width = image.getWidth();
+		for (int x = 0; x < width; x++) {
+			for (int y = 0; y < height; y++) {
+				for (ChannelType c : Image.rgbValues()) {
+					double pixel = image.getPixel(x, y, c);
+					if (pixel >= t1 && pixel <= t2) {
+						boolean isBorderNeighbor1 = y > 0
+								&& image.getPixel(x, y - 1, c) == Image.MAX_VAL;
+						boolean isBorderNeighbor2 = x > 0
+								&& image.getPixel(x - 1, y, c) == Image.MAX_VAL;
+						boolean isBorderNeighbor3 = y < height - 1
+								&& image.getPixel(x, y + 1, c) == Image.MAX_VAL;
+						boolean isBorderNeighbor4 = x < width - 1
+								&& image.getPixel(x + 1, y, c) == Image.MAX_VAL;
+						if (isBorderNeighbor1 || isBorderNeighbor2
+								|| isBorderNeighbor3 || isBorderNeighbor4) {
+							image.setPixel(x, y, c, Image.MAX_VAL);
+						} else {
+							image.setPixel(x, y, c, 0);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	private static void applyHysteresis(Image image, double t1, double t2,
+			ChannelType c) {
+		ChannelType color = c == null ? RED : c;
+		for (int x = 0; x < image.getWidth(); x++) {
+			for (int y = 0; y < image.getHeight(); y++) {
+				double pixel = image.getPixel(x, y, color);
+				double val = pixel;
+				if (pixel < t1) {
+					val = 0;
+				} else if (pixel > t2) {
+					val = Image.MAX_VAL;
+				}
+				if (c == null) {
+					image.setPixel(x, y, RED, val);
+					image.setPixel(x, y, GREEN, val);
+					image.setPixel(x, y, BLUE, val);
+				} else {
+					image.setPixel(x, y, c, val);
+				}
+			}
+		}
+	}
+
+	public static void hysteresisForCanny(Image image) {
+		for (ChannelType c : Image.rgbValues()) {
+			double thresholdVal = ThresholdUtils.getGlobalThresholdValue(128,
+					image, 1, c);
+			hysteresisForCanny(image, c, thresholdVal - 15, thresholdVal + 15);
+		}
+	}
 }

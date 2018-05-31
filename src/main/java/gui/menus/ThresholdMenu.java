@@ -5,6 +5,7 @@ import gui.Window;
 import gui.tp1.punctual.ThresholdDialog;
 import gui.tp2.thresholds.ColorGlobalThresholdDialog;
 import gui.tp2.thresholds.GlobalThresholdDialog;
+import gui.tp3.HysteresisThresholdDialog;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -66,10 +67,23 @@ public class ThresholdMenu extends JMenu {
 			}
 		});
 		
+		JMenuItem hysteresis = new JMenuItem("Hysteresis");
+		hysteresis.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				Panel panel = (((Window) getTopLevelAncestor()).getPanel());
+				if (panel.getImage() == null) {
+					return;
+				}
+				JDialog dialog = new HysteresisThresholdDialog(panel);
+				dialog.setVisible(true);
+			}
+		});
+		
 
 		
 		add(threshold);
 		add(globalThreshold);
 		add(otsuThreshold);
+		add(hysteresis);
 	}
 }
